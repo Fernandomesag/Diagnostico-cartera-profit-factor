@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profit Factor - Escáner de Salud de Cartera</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .brand-color { color: #00adc0; }
+        .bg-brand { background-color: #00adc0; }
+        .border-brand { border-color: #00adc0; }
+        
+        .option-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 2px solid #e2e8f0;
+        }
+        .option-card.selected {
+            border-color: #00adc0;
+            background-color: #f0fdfa;
+            transform: scale(1.02);
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background-color: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #00adc0;
+            transition: width 0.4s ease;
+        }
+
+        .result-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 md:p-8">
+
+    <div class="max-w-2xl w-full">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900">Profit <span class="brand-color">Factor</span></h1>
+            <p class="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Diagnóstico de Negocio</p>
+        </div>
+
+        <!-- Pantalla de Inicio -->
+        <div id="welcome-screen" class="bg-white rounded-3xl p-8 shadow-xl text-center">
+            <div class="w-20 h-20 bg-cyan-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 brand-color" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">¿Tu cartera de clientes es un activo o una carga?</h2>
+            <p class="text-gray-600 mb-8 leading-relaxed">
+                Muchos consultores financieros son esclavos de sus clientes porque no saben distinguir entre un buen negocio y una trampa de tiempo. Descubre en 2 minutos la salud real de tu consultoría.
+            </p>
+            <button onclick="startAudit()" class="w-full bg-brand text-white font-bold py-4 rounded-2xl hover:brightness-110 transition-all shadow-lg text-lg">
+                Empezar Escaneo →
+            </button>
+        </div>
+
+        <!-- Pantalla de Preguntas (Se muestra dinámicamente) -->
+        <div id="question-screen" class="hidden">
+            <div class="mb-6">
+                <div class="flex justify-between items-end mb-2">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest" id="step-counter">Pregunta 1 de 5</span>
+                    <span class="text-xs font-bold brand-color" id="step-percent">20%</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill" style="width: 20%"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-8 shadow-xl">
+                <h3 id="question-text" class="text-xl font-bold text-gray-800 mb-8 leading-tight">¿Qué porcentaje de tus clientes te pagan tarde o piden rebaja sistemáticamente?</h3>
+                
+                <div id="options-container" class="space-y-4">
+                    <!-- Opciones se cargan aquí -->
+                </div>
+
+                <div class="mt-10 pt-6 border-t border-gray-50 flex justify-between">
+                    <button onclick="prevQuestion()" id="prev-btn" class="text-gray-400 font-bold text-sm hover:text-gray-600 opacity-0 pointer-events-none transition-all">← Anterior</button>
+                    <button onclick="nextQuestion()" id="next-btn" class="bg-gray-100 text-gray-400 font-bold px-8 py-3 rounded-xl cursor-not-allowed transition-all">Siguiente</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla de Resultados -->
+        <div id="result-screen" class="hidden">
+            <div class="result-gradient rounded-3xl p-8 md:p-12 shadow-2xl text-white text-center">
+                <h2 class="text-xl opacity-80 mb-2">Salud de tu Cartera:</h2>
+                <div id="score-circle" class="text-7xl font-black mb-6 tracking-tighter brand-color">85%</div>
+                
+                <div id="result-tag" class="inline-block px-4 py-1 rounded-full border border-brand/30 bg-brand/10 text-brand text-xs font-bold uppercase mb-8 tracking-widest">
+                    Negocio en Riesgo
+                </div>
+
+                <div class="text-left bg-white/5 rounded-2xl p-6 mb-8 border border-white/10">
+                    <h4 class="font-bold text-lg mb-3">Veredicto Profit Factor:</h4>
+                    <p id="verdict-text" class="text-sm text-gray-300 leading-relaxed italic">
+                        "Tienes un negocio rehén. Estás atrapado atendiendo clientes que no valoran tu experiencia."
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Botón actualizado con el link de agendamiento de Calendly -->
+                    <button onclick="window.open('https://calendly.com/fernadomesa/diagnostico-gratuito', '_blank')" class="w-full bg-brand text-white font-bold py-5 rounded-2xl hover:scale-[1.02] transition-all shadow-xl text-lg">
+                        Agenda un diagnóstico personalizado gratuito
+                    </button>
+                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Basado en 25 años de experiencia gestionando negocios reales</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const questions = [
+            {
+                text: "¿Qué porcentaje de tus clientes te contactan fuera de horario o fines de semana?",
+                options: [
+                    { text: "Casi todos, creen que soy soporte 24/7", points: 0 },
+                    { text: "Unos pocos 'favoritos' que abusan", points: 10 },
+                    { text: "Nadie, tengo procesos y límites claros", points: 20 }
+                ]
+            },
+            {
+                text: "Si mañana duplicas tus precios... ¿qué pasaría?",
+                options: [
+                    { text: "Se irían todos corriendo", points: 0 },
+                    { text: "Se irían algunos, pero sobreviviría", points: 10 },
+                    { text: "Se quedarían los mejores porque valoran mi resultado", points: 20 }
+                ]
+            },
+            {
+                text: "¿Cuántos de tus clientes actuales son 'referidos' que llegaron pidiendo descuento?",
+                options: [
+                    { text: "La mayoría, dependo solo de referidos baratos", points: 0 },
+                    { text: "Algunos, pero trato de filtrar", points: 10 },
+                    { text: "Muy pocos, yo elijo con quién trabajar", points: 20 }
+                ]
+            },
+            {
+                text: "¿Qué sientes el domingo por la noche al pensar en tu agenda del lunes?",
+                options: [
+                    { text: "Ansiedad, mis clientes me agotan", points: 0 },
+                    { text: "Resignación, es lo que hay para pagar cuentas", points: 10 },
+                    { text: "Entusiasmo, trabajo con gente que respeto", points: 20 }
+                ]
+            },
+            {
+                text: "¿Te sientes con la libertad de 'despedir' a tu peor cliente hoy mismo?",
+                options: [
+                    { text: "Imposible, necesito ese flujo de caja", points: 0 },
+                    { text: "Podría, pero me dolería el bolsillo", points: 10 },
+                    { text: "Sí, tengo prospectos en cola esperando", points: 20 }
+                ]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let totalScore = 0;
+        let selections = new Array(questions.length).fill(null);
+
+        function startAudit() {
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('question-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('question-text').innerText = q.text;
+            document.getElementById('step-counter').innerText = `Pregunta ${currentQuestion + 1} de ${questions.length}`;
+            
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            document.getElementById('step-percent').innerText = `${Math.round(progress)}%`;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const div = document.createElement('div');
+                div.className = `option-card p-5 rounded-2xl font-medium text-gray-700 ${selections[currentQuestion] === idx ? 'selected' : ''}`;
+                div.innerText = opt.text;
+                div.onclick = () => selectOption(idx, opt.points);
+                container.appendChild(div);
+            });
+
+            // Navegación
+            const prevBtn = document.getElementById('prev-btn');
+            if (currentQuestion > 0) {
+                prevBtn.classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                prevBtn.classList.add('opacity-0', 'pointer-events-none');
+            }
+
+            const nextBtn = document.getElementById('next-btn');
+            if (selections[currentQuestion] !== null) {
+                nextBtn.classList.remove('bg-gray-100', 'text-gray-400', 'cursor-not-allowed');
+                nextBtn.classList.add('bg-brand', 'text-white', 'hover:brightness-110');
+            } else {
+                nextBtn.classList.add('bg-gray-100', 'text-gray-400', 'cursor-not-allowed');
+                nextBtn.classList.remove('bg-brand', 'text-white', 'hover:brightness-110');
+            }
+        }
+
+        function selectOption(idx, points) {
+            selections[currentQuestion] = idx;
+            showQuestion();
+        }
+
+        function nextQuestion() {
+            if (selections[currentQuestion] === null) return;
+            
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('question-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            const totalMax = questions.length * 20;
+            const userScore = selections.reduce((acc, selIdx, qIdx) => {
+                return acc + questions[qIdx].options[selIdx].points;
+            }, 0);
+
+            const percent = (userScore / totalMax) * 100;
+            document.getElementById('score-circle').innerText = `${Math.round(percent)}%`;
+
+            let verdict = "";
+            let tag = "";
+
+            if (percent >= 80) {
+                tag = "Negocio Saludable";
+                verdict = "Tienes un sistema sólido. Eres el dueño de tu tiempo y tus clientes te respetan. Tu próximo reto es escalar sin perder esta calidad de vida.";
+            } else if (percent >= 50) {
+                tag = "Estable pero Estancado";
+                verdict = "No estás en crisis, pero estás 'cómodo' en un lugar peligroso. Tienes clientes que te quitan energía y te impiden buscar a los que pagan lo que realmente vales.";
+            } else {
+                tag = "En Cuidados Intensivos";
+                verdict = "No tienes un negocio, eres rehén de tus clientes. Si sigues así, te vas a quemar. Necesitas un sistema Profit Factor para limpiar tu cartera y atraer clientes de calidad urgentemente.";
+            }
+
+            document.getElementById('verdict-text').innerText = `"${verdict}"`;
+            document.getElementById('result-tag').innerText = tag;
+        }
+    </script>
+</body>
+</html>
